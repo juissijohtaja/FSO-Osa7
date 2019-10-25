@@ -1,31 +1,28 @@
-import React, { useState, useImperativeHandle } from 'react'
-import blogService from '../services/blogs'
-
-const Blog = React.forwardRef((props, ref) => {
-  const [visible, setVisible] = useState(false)
-  //console.log('Blog props', props)
-
-  const setBlogs = props.setBlogs
-  const setNotification = props.setNotification
-  const onClickTest = props.onClickTest
+import React, { useState } from 'react'
+import { connect } from 'react-redux'
+import { notificationSet } from '../reducers/notificationReducer'
+import { deleteBlog, initializeBlogs, addLike, createComment } from '../reducers/blogReducer'
+import { Comment, Form, Button, Icon, Label, Header, Segment } from 'semantic-ui-react'
 
 
-  //const hideWhenVisible = { display: visible ? 'none' : '' }
-  const showWhenVisible = { display: visible ? '' : 'none' }
 
-  const toggleVisibility = () => {
-    setVisible(!visible)
+//const Blog = React.forwardRef((props, ref) => {
+const Blog = (props) => {
+  if ( props.blog === undefined) {
+    return null
   }
-
-  useImperativeHandle(ref, () => {
-    return {
-      toggleVisibility
-    }
+  const [commentObject, setCommentObject] = useState({
+    text: ''
   })
+  console.log('Blog props', props)
+
+  const onClickTest = props.onClickTest
+  // eslint-disable-next-line no-unused-vars
+
+
 
   const userName = () => {
     if (props.blog.user) {
-      //console.log('props.blog.user', props.blog.user)
       console.log('props.blog.user.name', props.blog.user.name)
       return (props.blog.user.name)
     } else {
@@ -33,134 +30,149 @@ const Blog = React.forwardRef((props, ref) => {
     }
   }
 
-  const updateBlog = async (newBlogObject, id) => {
-    const newObject = newBlogObject
-    try {
-      await blogService.update(id, newObject)
-      setBlogs(await blogService.getAll())
-
-      const newNotification = {
-        message: 'New like added!',
-        style: 'success'
-      }
-      setNotification( newNotification )
-      setTimeout(() => {
-        setNotification({ message: null, style: null })
-      }, 5000)
-
-    } catch (exception) {
-      const newNotification = {
-        message: 'Like not added.',
-        style: 'failure'
-      }
-      setNotification( newNotification )
-      setTimeout(() => {
-        setNotification({ message: null, style: null })
-      }, 5000)
-    }
-  }
-
   const removeBlog = async (id) => {
     console.log('REMOVE id', id)
     if (window.confirm('Do you really want to remove this post?')) {
       try {
-        await blogService.remove(id)
-        setBlogs(await blogService.getAll())
-
-        const newNotification = {
-          message: 'Blog removed!',
-          style: 'success'
-        }
-        setNotification( newNotification )
-        setTimeout(() => {
-          setNotification({ message: null, style: null })
-        }, 5000)
-
+        props.deleteBlog(id)
+        console.log('REMOVE DONE')
+        props.initializeBlogs()
+        props.notificationSet('Blog removed!', 3)
       } catch (exception) {
-        const newNotification = {
-          message: 'Blog not removed.',
-          style: 'failure'
-        }
-        setNotification( newNotification )
-        setTimeout(() => {
-          setNotification({ message: null, style: null })
-        }, 5000)
+        props.notificationSet('Blog not removed.', 3)
       }
     }
   }
 
   const handleLike = async (event) => {
     event.preventDefault()
-
     console.log('I Like!')
-    //console.log('event.target', event.target)
     const blog = props.blog
-    //const updateBlog = props.updateBlog
-
-    console.log('likes before', blog.likes)
-    blog.likes += 1
-    console.log('likes after', blog.likes)
-    updateBlog(blog, blog.id)
+    try {
+      props.addLike(blog)
+      props.notificationSet('New like added!', 3)
+    } catch (exception) {
+      props.notificationSet('Like not added.', 3)
+    }
   }
 
   const RemoveButton = () => {
-    console.log('showRemoveButton', props.showRemoveButton)
-    if (props.showRemoveButton) {
-      return <p><button onClick={handleRemove}>Remove post</button></p>
+    //console.log('showRemoveButton', props.showRemoveButton)
+    console.log('remove props', props.blog.user.username === props.loggedUser.username)
+    const showRemove = () => {
+      return props.blog.user.username === props.loggedUser.username
+    }
+    if (showRemove()) {
+      return <p><Button onClick={handleRemove}>Remove post</Button></p>
     } else {
       return <div></div>
     }
   }
 
+  const Comments = () => {
+    console.log('blog comments', props.blog.comments)
+    return (
+      <Segment color='teal'>
+        <Header as='h3' dividing>
+            Comments
+        </Header>
+        <Comment.Group>
+          {props.blog.comments.map(comment => {
+            return (
+              <Comment key={comment.id}>
+                <Comment.Text>{comment.text}</Comment.Text>
+              </Comment>
+            )
+          })}
+        </Comment.Group>
+      </Segment>
+    )
+  }
+
+  const addCommentObject = async (event) => {
+    event.preventDefault()
+    const blogId = props.blog.id
+    console.log('addCommentObject, newCommentObject', commentObject)
+    try {
+      props.createComment(commentObject, blogId)
+      setCommentObject({
+        text: '',
+      })
+
+      props.notificationSet(`New comment added: ${commentObject.text}`, 3)
+    } catch (exception) {
+      props.notificationSet('Comment not created. Check input fields.', 3)
+    }
+  }
+
+  const handleCommentObjectChange = (event) => {
+    console.log('CommentForm event', event)
+    setCommentObject({ ...commentObject, [event.target.name]: event.target.value })
+  }
+
+  const CommentForm = ({ addCommentObject }) => {
+    console.log('CommentForm commentText', commentObject)
+    return (
+      <div className='commentForm'>
+        <Form onSubmit={addCommentObject}>
+          <div>
+            <input
+              name="text"
+              value={commentObject.text}
+              onChange={handleCommentObjectChange}
+            /> <Button secondary type="submit">Add comment</Button>
+          </div>
+        </Form>
+      </div>
+    )
+  }
+
   const handleRemove = async (event) => {
     event.preventDefault()
     const blog = props.blog
-    //const removeBlog = props.removeBlog
     console.log('props.blog.user.id', props.blog.user.id)
-
     console.log('Remove this!')
     console.log('event.target', event.target)
     removeBlog(blog.id)
   }
 
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    borderBottom: '1px dashed #cecece',
-    marginBottom: 5,
-  }
-  const blogHeaderStyle = {
-    cursor: 'pointer',
-    backgroundColor: '#efefef',
-    padding: '5px 10px'
-  }
-  const blogContentStyle = {
-    padding: '5px 10px'
-  }
-
   return (
-    <div style={blogStyle} className='blogContentFull'>
-      <div className='blogContent'>
-        <div onClick={toggleVisibility} style={blogHeaderStyle} className='blogDefault'>
-          <h3 className='blogTitle'>
+    <div>
+      <div>
+        <div>
+          <h3>
             {props.blog.title}
           </h3>
-          <p className='blogAuthor'>
+          <p>
             {props.blog.author}
           </p>
-        </div>
-      </div>
-      <div style={showWhenVisible} className='blogMore' >
-        <div onClick={toggleVisibility} style={blogContentStyle} >
-          <p className='blogLikes'>{props.blog.likes} likes <button onClick={onClickTest? onClickTest : handleLike}>Like this</button></p>
-          <p className='blogUrl'>
+          <p>
             Website: <a href={props.blog.url} target="_blank" rel="noopener noreferrer">{props.blog.url}</a> <br/>Added by: {userName()}
           </p>
+          <Button as='div' labelPosition='right'>
+            <Button color='red' onClick={onClickTest? onClickTest : handleLike}>
+              <Icon name='heart' />
+              Like
+            </Button>
+            <Label as='a' basic color='red' pointing='left'>
+              {props.blog.likes}
+            </Label>
+          </Button>
           <RemoveButton />
+          <Comments />
+          <CommentForm addCommentObject={addCommentObject} handleCommentObjectChange={handleCommentObjectChange} commentObject={commentObject}/>
         </div>
       </div>
     </div>
   )
-})
+}
 
-export default Blog
+const mapStateToProps = (state) => {
+  console.log('BLOG STATE', state)
+  return {
+    notification: state.notification,
+    loggedUser: state.loggedUser,
+    blogs: state.blogs,
+  }
+}
+export default connect(mapStateToProps, { notificationSet, deleteBlog, initializeBlogs, addLike, createComment })(Blog)

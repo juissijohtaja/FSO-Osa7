@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import { Form, Button } from 'semantic-ui-react'
 
 const LoginForm = ({ handleLogin, username, password }) => {
 
@@ -9,17 +10,17 @@ const LoginForm = ({ handleLogin, username, password }) => {
   return (
     <div className='loginForm'>
       <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <div>
-          username
-          <input {...username} />
-        </div>
-        <div>
-          password
-          <input {...password} />
-        </div>
-        <button type="submit">login</button>
-      </form>
+      <Form onSubmit={handleLogin}>
+        <Form.Field>
+          <label>username</label>
+          <input name='username' {...username} />
+        </Form.Field>
+        <Form.Field>
+          <label>password</label>
+          <input type='password' {...password} />
+        </Form.Field>
+        <Button type="submit">login</Button>
+      </Form>
     </div>
   )
 }

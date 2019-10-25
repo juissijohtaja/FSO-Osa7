@@ -5,13 +5,15 @@ const jwt = require('jsonwebtoken')
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog
-    .find({}).populate('user', { username: 1, name: 1 })
-  response.json(blogs.map(blog => blog.toJSON()))
+    .find({}).populate('user', { username: 1, name: 1 }).populate('comments', { text: 1 })
+  response.json(blogs.map(blog =>
+    blog.toJSON()
+  ))
 })
 
 blogsRouter.get('/:id', async (request, response, next) => {
   try{
-    const blog = await Blog.findById(request.params.id)
+    const blog = await Blog.findById(request.params.id).populate('user', { username: 1, name: 1 }).populate('comments', { text: 1 })
     if (blog) {
       response.json(blog.toJSON())
     } else {
@@ -49,7 +51,7 @@ blogsRouter.post('/', async (request, response, next) => {
       author: body.author,
       url: body.url,
       likes: body.likes,
-      user: user._id
+      user: user
     })
 
     const savedBlog = await blog.save()
@@ -94,38 +96,33 @@ blogsRouter.delete('/:id', async (request, response, next) => {
 
 blogsRouter.put('/:id', async (request, response, next) => {
   const body = request.body
-
   const blog = {
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes
+    likes: body.likes,
   }
+
   try {
-    const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
+    const updatedBlog = await Blog
+      .findByIdAndUpdate(request.params.id, blog, { new: true })
+      .populate('user', { username: 1, name: 1 })
+    console.log('updatedBlog', updatedBlog)
     response.json(updatedBlog.toJSON())
   } catch (exception) {
     next(exception)
   }
 })
 
-
-/*
-blogsRouter.put('/:id', (request, response, next) => {
-  const body = request.body
-
-  const blog = {
-    title: body.title,
-    author: body.author,
-    url: body.url,
-    likes: body.likes
+/* blogsRouter.put('/:id', async (request, response, next) => {
+  try {
+    const updatedBlog = await Blog
+      .findByIdAndUpdate(request.params.id, request.body, { new: true })
+      .populate('user', { username: 1, name: 1 }).populate('comments', { text: 1 })
+    response.json(updatedBlog.toJSON())
+  } catch (exception) {
+    next(exception)
   }
-
-  Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
-    .then(updatedBlog => {
-      response.json(updatedBlog.toJSON())
-    })
-    .catch(error => next(error))
 }) */
 
 module.exports = blogsRouter
