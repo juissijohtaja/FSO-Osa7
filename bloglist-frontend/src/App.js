@@ -48,20 +48,20 @@ const App = (props) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
 
-  const [newBlogObject, setNewBlogObject] = useState(
+  /* const [newBlogObject, setNewBlogObject] = useState(
     {
       title: '',
       author: '',
       url: '',
     }
-  )
+  ) */
 
   const username = useField('text')
   const password = useField('password')
 
   const blogFormRef = React.createRef()
 
-  const addBlogObject = async (event) => {
+  /* const addBlogObject = async (event) => {
     event.preventDefault()
     blogFormRef.current.toggleVisibility()
     const blogObject = {
@@ -82,13 +82,13 @@ const App = (props) => {
     } catch (exception) {
       props.notificationSet('Blog not created. Check input fields.', 3)
     }
-  }
+  } */
 
-  const handleBlogObjectChange = (event) => {
+  /* const handleBlogObjectChange = (event) => {
     //console.log({ [event.target.name]: event.target.value })
     setNewBlogObject({ ...newBlogObject, [event.target.name]: event.target.value })
     //console.log('newBlogObject', newBlogObject)
-  }
+  } */
 
   const Footer = () => {
 
@@ -99,39 +99,10 @@ const App = (props) => {
     )
   }
 
-  const handleLogin = async (event) => {
-    event.preventDefault()
-    try {
-      console.log('logging in...')
-      props.loginSet(username, password)
-
-      /* const user = await loginService.login({
-        username: username.value,
-        password: password.value
-      })
-
-      window.localStorage.setItem(
-        'loggedBlogappUser', JSON.stringify(user)
-      )
-      blogService.setToken(user.token)
-      setUser(user) */
-
-      username.reset()
-      password.reset()
-
-
-      props.notificationSet('Login successful.', 3)
-      console.log('login successful')
-    } catch (exception) {
-      props.notificationSet('Wrong credentials.', 3)
-    }
-  }
-
   const handleLogout = async () => {
     try {
       window.localStorage.removeItem('loggedBlogappUser')
       console.log('logging out...')
-      //setUser(null)
       props.removeLoggedUser()
       props.notificationSet('Logout successful.', 3)
       console.log('logout successful')
@@ -144,11 +115,7 @@ const App = (props) => {
     return (
       <div>
         <Togglable buttonLabel='Create new blog' ref={blogFormRef}>
-          <BlogForm
-            newBlogObject={newBlogObject}
-            handleBlogObjectChange={handleBlogObjectChange}
-            addBlogObject={addBlogObject}
-          />
+          <BlogForm />
         </Togglable>
       </div>
     )
@@ -159,7 +126,7 @@ const App = (props) => {
       <div>
         <Header as='h1'>Latest blogs</Header>
         <BlogList />
-        <Header as='h2'>Create new blog</Header>
+        <Header as='h2'>Add blog</Header>
         {blogObjectForm()}
         <Header as='h2'>Counter test</Header>
         <button onClick={() => { props.counterPlus() } }>plus</button>
@@ -210,7 +177,6 @@ const App = (props) => {
           </div>
         ) :
           <LoginForm
-            handleLogin={handleLogin}
             username={username}
             password={password} />
         }
@@ -234,7 +200,7 @@ const App = (props) => {
             <Menu.Menu position='right'>
               <Menu.Item link>
                 {props.loggedUser
-                  ? <span><em>{props.loggedUser.name} logged in</em> <Button color='teal' onClick={() => handleLogout()}>Logout</Button></span>
+                  ? <span><em>{props.loggedUser.name} logged in</em> <Button id='logout' color='teal' onClick={() => handleLogout()}>Logout</Button></span>
                   : <Link to="/login"><Button primary>Login</Button></Link>
                 }
               </Menu.Item>
@@ -268,6 +234,7 @@ const mapStateToProps = (state) => {
     blogs: state.blogs,
     loggedUser: state.loggedUser,
     users: state.users,
+    //login: state.login,
     counter: state.counter
   }
 }

@@ -13,7 +13,8 @@
     "deploy:jk": "npm run build:ui && npm run deploy",
     "logs:prod": "heroku logs --tail",
     "lint": "eslint .",
-    "test": "cross-env NODE_ENV=test jest --verbose --runInBand"
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
+    "start:test": "cross-env NODE_ENV=test node index.js"
   },
   "author": "JK",
   "license": "MIT",

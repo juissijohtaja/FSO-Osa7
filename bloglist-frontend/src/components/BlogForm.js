@@ -1,40 +1,60 @@
 import React from 'react'
 import { Form, Button } from 'semantic-ui-react'
 
-//import { connect } from 'react-redux'
-//import { blogReducer } from '../reducers/blogReducer'
-//import { blogSet } from '../reducers/blogReducer'
+import { connect } from 'react-redux'
+import { inputTitle, inputAuthor, inputUrl, inputResetBLogForm } from '../reducers/blogFormReducer'
+import { notificationSet } from '../reducers/notificationReducer'
+import { createBlog } from '../reducers/blogReducer'
 
+const BlogForm = (props) => {
 
+  const addBlogObject = async (event) => {
+    event.preventDefault()
+    const blogObject = {
+      title: props.blogForm.title,
+      author: props.blogForm.author,
+      url: props.blogForm.url,
+    }
+    console.log('blogObject', blogObject)
+    try {
+      if (props.loggedUser) {
+        props.createBlog(blogObject)
+        props.inputResetBLogForm()
+        props.notificationSet(`New blog added: ${blogObject.title} by ${blogObject.author}`, 3)
+      } else {
+        props.notificationSet('Please login', 3)
+      }
+    } catch (exception) {
+      props.notificationSet('Blog not created. Check input fields.', 3)
+    }
+  }
 
-const BlogForm = ({ addBlogObject, handleBlogObjectChange, newBlogObject }) => {
-  const title = newBlogObject.title
-  const author = newBlogObject.author
-  const url = newBlogObject.url
   return (
     <div>
       <Form onSubmit={addBlogObject}>
         <Form.Field>
           <label>title:</label>
-          <input name="title" value={title} onChange={handleBlogObjectChange} /></Form.Field>
+          <input id='title' name='title' value={props.blogForm.title} onChange={(event) => { props.inputTitle(event.target.value) } } /></Form.Field>
         <Form.Field>
           <label>author:</label>
-          <input name="author" value={author} onChange={handleBlogObjectChange} /></Form.Field>
+          <input id='author' name='author' value={props.blogForm.author} onChange={(event) => { props.inputAuthor(event.target.value) } } /></Form.Field>
         <Form.Field>
           <label>url:</label>
-          <input name="url" value={url} onChange={handleBlogObjectChange} /></Form.Field>
-        <Button primary type="submit">Save</Button>
+          <input id='url' name='url' value={props.blogForm.url} onChange={(event) => { props.inputUrl(event.target.value) } } /></Form.Field>
+        <Button primary type='submit'>Save</Button>
       </Form>
     </div>
   )
 }
 
-export default BlogForm
+//export default BlogForm
 
-/* const mapStateToProps = (state) => {
-  console.log('STATE', state)
+const mapStateToProps = (state) => {
+  console.log('BlogForm state', state)
   return {
-    blog: state.blog,
+    blogForm: state.blogForm,
+    loggedUser: state.loggedUser
   }
 }
-export default connect(mapStateToProps, { blogSet })(BlogForm) */
+
+export default connect(mapStateToProps, { inputTitle, inputAuthor, inputUrl, inputResetBLogForm, notificationSet, createBlog })(BlogForm)

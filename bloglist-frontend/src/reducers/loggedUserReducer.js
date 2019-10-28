@@ -34,9 +34,10 @@ export const loginSet = (username, password) => {
   return async dispatch => {
 
     const user = await loginService.login({
-      username: username.value,
-      password: password.value
+      username,
+      password
     })
+    console.log('loggedUserReducer, loginSet user', user)
 
     window.localStorage.setItem(
       'loggedBlogappUser', JSON.stringify(user)
